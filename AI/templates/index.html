@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Movie Recommender</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-dark: #5649c0;
+            --secondary: #00cec9;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --glass: rgba(255, 255, 255, 0.15);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(108, 92, 231, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 206, 201, 0.2) 0%, transparent 20%);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: slideUp 0.8s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0) 60%
+            );
+            transform: rotate(30deg);
+            pointer-events: none;
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+        }
+
+        .card-title i {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .rating-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .rating-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+
+        .rating-item:hover {
+            transform: translateX(5px);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .rating-item label {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .rating-stars input {
+            display: none;
+        }
+
+        .rating-stars label {
+            color: #444;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .rating-stars label:hover {
+            transform: scale(1.2);
+            color: #ffc107;
+        }
+
+        .rating-stars input:checked ~ label {
+            color: #ffc107;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 1.8rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            font-size: 1rem;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            z-index: -1;
+            transition: opacity 0.3s;
+            opacity: 1;
+        }
+
+        .btn:hover::before {
+            opacity: 0.8;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .file-upload-btn {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            padding: 1.5rem;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .file-upload-btn:hover {
+            border-color: var(--accent);
+            background: rgba(253, 121, 168, 0.1);
+        }
+
+        .file-upload-btn input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .results-container {
+            margin-top: 3rem;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .result-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            border: var(--border);
+            animation: slideUp 0.6s ease;
+        }
+
+        .result-title {
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .result-title i {
+            color: var(--accent);
+        }
+
+        .result-item {
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+
+        .result-item:hover {
+            transform: translateX(10px);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .result-item h3 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            background: var(--glass);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1.5rem;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s linear infinite;
+        }
+
+        .pca-image {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            margin-top: 1rem;
+            border: var(--border);
+        }
+
+        .cluster-badge {
+            display: inline-block;
+            padding: 2rem;
+            font-size: 2.5rem;
+            font-weight: 800;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: white;
+            margin: 2rem auto;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .movie-match {
+            font-size: 1.8rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .rating-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .cluster-badge {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+        }
+
+        /* Special effects */
+        .glow {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .neon-text {
+            color: #fff;
+            text-shadow:
+                0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 20px var(--accent),
+                0 0 40px var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="neon-text">AI Movie Recommender</h1>
+            <p class="subtitle">Discover personalized movie recommendations powered by machine learning algorithms</p>
+        </header>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-film"></i> Rate Movies</h2>
+            <form id="rateForm">
+                <div class="rating-grid">
+                    {% for movie in movies %}
+                    <div class="rating-item">
+                        <label for="{{ movie }}">{{ movie }}</label>
+                        <div class="rating-stars" data-movie="{{ movie }}">
+                            {% for i in range(5, 0, -1) %}
+                            <input type="radio" id="{{ movie }}-{{ i }}" name="{{ movie }}" value="{{ i }}">
+                            <label for="{{ movie }}-{{ i }}">★</label>
+                            {% endfor %}
+                            <input type="radio" id="{{ movie }}-0" name="{{ movie }}" value="0" checked>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="btn-group">
+                    <button type="button" id="recommendBtn" class="btn btn-primary">
+                        <i class="fas fa-robot"></i> Get Recommendations
+                    </button>
+                    <button type="button" id="predictBtn" class="btn btn-secondary">
+                        <i class="fas fa-crystal-ball"></i> Will I Like It?
+                    </button>
+                    <button type="button" id="aprioriBtn" class="btn btn-primary">
+                        <i class="fas fa-network-wired"></i> Association Rules
+                    </button>
+                    <button type="button" id="clusterBtn" class="btn btn-secondary">
+                        <i class="fas fa-atom"></i> Show Cluster
+                    </button>
+                    <button type="button" id="pcaBtn" class="btn btn-primary">
+                        <i class="fas fa-projector"></i> Show PCA
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-camera-movie"></i> Identify Movie from Poster</h2>
+            <form id="posterForm" class="file-upload" enctype="multipart/form-data">
+                <div class="file-upload-btn">
+                    <i class="fas fa-cloud-upload-alt fa-2x" style="margin-bottom: 1rem;"></i>
+                    <h3>Drag & Drop or Click to Upload</h3>
+                    <p>Supports JPG, PNG, GIF (Max 2MB)</p>
+                    <input type="file" name="poster" accept="image/*" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Identify Movie
+                </button>
+            </form>
+            <div id="posterResult"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3>Analyzing your preferences...</h3>
+            <p>Our AI is working hard to find the perfect recommendations</p>
+        </div>
+
+        <div class="results-container" id="results"></div>
+    </div>
+
+    <script>
+    // Helper functions
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('results').style.opacity = '0.5';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.opacity = '1';
+    }
+
+    function clearResults() {
+        document.getElementById('results').innerHTML = '';
+    }
+
+    function showError(message) {
+        const results = document.getElementById('results');
+        results.innerHTML = `
+            <div class="result-card">
+                <h3 class="result-title">Error</h3>
+                <div class="result-item">
+                    <p>${message}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Get ratings from form
+    function getRatings() {
+        const formData = new FormData(document.getElementById('rateForm'));
+        const ratings = {};
+        formData.forEach((value, key) => ratings[key] = parseInt(value) || 0);
+        return ratings;
+    }
+
+    // KNN Recommendations
+    document.getElementById('recommendBtn').addEventListener('click', async function() {
+        showLoading();
+        clearResults();
+        
+        try {
+            const ratings = getRatings();
+            const response = await fetch('/recommend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ratings)
+            });
+            
+            if (!response.ok) throw new Error('Network error');
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            let html = `
+                <div class="result-card">
+                    <h2 class="result-title"><i class="fas fa-robot"></i> Recommended Movies (KNN)</h2>
+            `;
+
+            if (Object.keys(data).length === 0) {
+                html += `<div class="result-item"><p>No recommendations found. Try rating more movies.</p></div>`;
+            } else {
+                for (let movie in data) {
+                    const rating = data[movie];
+                    const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+                    html += `
+                        <div class="result-item">
+                            <h3>${movie}</h3>
+                            <p>Predicted rating: ${rating.toFixed(1)}</p>
+                            <p>${stars}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `</div>`;
+            document.getElementById('results').innerHTML = html;
+        } catch (err) {
+            hideLoading();
+            showError('Failed to get recommendations. Please try again.');
+            console.error(err);
+        }
+    });
+
+    // Prediction (Will I Like It?)
+    document.getElementById('predictBtn').addEventListener('click', async function() {
+        showLoading();
+        clearResults();
+        
+        try {
+            const ratings = getRatings();
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ratings)
+            });
+            
+            if (!response.ok) throw new Error('Network error');
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            let html = `
+                <div class="result-card">
+                    <h2 class="result-title"><i class="fas fa-magic"></i> Prediction Results</h2>
+                    <p>Different algorithms predict whether you'll like these movies:</p>
+            `;
+
+            for (let movie in data) {
+                html += `<div class="result-item"><h3>${movie}</h3>`;
+                
+                if (data[movie].error) {
+                    html += `<p>${data[movie].error}</p>`;
+                } else {
+                    for (let algo in data[movie]) {
+                        const prediction = data[movie][algo];
+                        const icon = prediction.includes("Понравится") ? 
+                            '<i class="fas fa-thumbs-up" style="color: #00cec9;"></i>' : 
+                            '<i class="fas fa-thumbs-down" style="color: #fd79a8;"></i>';
+                        
+                        html += `<p>${algo}: ${icon} ${prediction}</p>`;
+                    }
+                }
+                
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            document.getElementById('results').innerHTML = html;
+        } catch (err) {
+            hideLoading();
+            showError('Failed to get predictions. Please try again.');
+            console.error(err);
+        }
+    });
+
+    // Apriori Recommendations
+    document.getElementById('aprioriBtn').addEventListener('click', async function() {
+        showLoading();
+        clearResults();
+        
+        try {
+            const ratings = getRatings();
+            const response = await fetch('/apriori', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ratings)
+            });
+            
+            if (!response.ok) throw new Error('Network error');
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            let html = `
+                <div class="result-card">
+                    <h2 class="result-title"><i class="fas fa-project-diagram"></i> Association Rules Recommendations</h2>
+            `;
+
+            if (data.message) {
+                html += `<div class="result-item"><p>${data.message}</p></div>`;
+            } else {
+                html += `<div class="result-item"><p>Based on ${data.rules_found} association rules found:</p></div>`;
+                
+                if (data.recommendations && data.recommendations.length > 0) {
+                    html += `<div class="result-item"><h3>Recommended Movies:</h3><ul>`;
+                    data.recommendations.forEach(movie => {
+                        html += `<li>${movie}</li>`;
+                    });
+                    html += `</ul></div>`;
+                } else {
+                    html += `<div class="result-item"><p>No new recommendations found based on your ratings.</p></div>`;
+                }
+            }
+
+            html += `</div>`;
+            document.getElementById('results').innerHTML = html;
+        } catch (err) {
+            hideLoading();
+            showError('Failed to get association rules. Please try again.');
+            console.error(err);
+        }
+    });
+
+    // Cluster Analysis
+    document.getElementById('clusterBtn').addEventListener('click', async function() {
+        showLoading();
+        clearResults();
+        
+        try {
+            const ratings = getRatings();
+            const response = await fetch('/cluster', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ratings)
+            });
+            
+            if (!response.ok) throw new Error('Network error');
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="result-card">
+                    <h2 class="result-title"><i class="fas fa-object-group"></i> Cluster Analysis</h2>
+                    <div style="text-align: center;">
+                        <p>Based on your ratings, you belong to:</p>
+                        <div class="cluster-badge">${data.cluster + 1}</div>
+                        <p>Users in the same cluster tend to have similar movie preferences.</p>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            hideLoading();
+            showError('Failed to perform cluster analysis. Please try again.');
+            console.error(err);
+        }
+    });
+
+    // PCA Visualization
+    document.getElementById('pcaBtn').addEventListener('click', async function() {
+        showLoading();
+        clearResults();
+        
+        try {
+            const ratings = getRatings();
+            const response = await fetch('/pca', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ratings)
+            });
+            
+            if (!response.ok) throw new Error('Network error');
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="result-card">
+                    <h2 class="result-title"><i class="fas fa-chart-line"></i> PCA Visualization</h2>
+                    <p>This plot shows how your preferences compare to other users in 2D space:</p>
+                    <img src="${data.plot}" class="pca-image" alt="PCA Visualization">
+                    <p>Points closer together represent users with similar movie preferences.</p>
+                </div>
+            `;
+        } catch (err) {
+            hideLoading();
+            showError('Failed to generate PCA visualization. Please try again.');
+            console.error(err);
+        }
+    });
+
+    // Poster Analysis
+    document.getElementById('posterForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        showLoading();
+        
+        const formData = new FormData(this);
+        const posterResult = document.getElementById('posterResult');
+        posterResult.innerHTML = '';
+
+        try {
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) throw new Error('Network error');
+            
+            const data = await response.json();
+            hideLoading();
+            
+            if (data.error) {
+                posterResult.innerHTML = `
+                    <div class="result-card">
+                        <h3 class="result-title">Error</h3>
+                        <div class="result-item">
+                            <p>${data.error}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                posterResult.innerHTML = `
+                    <div class="result-card">
+                        <h3 class="result-title">Identification Result</h3>
+                        <div class="result-item">
+                            <p>The poster is most likely from: <strong class="movie-match">${data.title}</strong></p>
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            hideLoading();
+            posterResult.innerHTML = `
+                <div class="result-card">
+                    <h3 class="result-title">Error</h3>
+                    <div class="result-item">
+                        <p>Failed to analyze the poster. Please try again.</p>
+                    </div>
+                </div>
+            `;
+            console.error(err);
+        }
+    });
+
+    // Star rating interaction
+    document.querySelectorAll('.rating-stars').forEach(stars => {
+        stars.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LABEL') {
+                const movie = e.currentTarget.dataset.movie;
+                const value = e.target.htmlFor.split('-')[1];
+                document.querySelector(`input[name="${movie}"][value="${value}"]`).checked = true;
+                
+                // Add visual feedback
+                e.target.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    e.target.style.transform = 'scale(1)';
+                }, 200);
+            }
+        });
+    });
+</script>
+</body>
+</html>
