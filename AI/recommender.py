@@ -16,13 +16,13 @@ import imagehash
 from PIL import Image
 import os
 
-# --- Список фильмов ---
+
 movie_names = [
     "Inception", "Titanic", "Matrix", "Avengers", "Toy Story",
     "Interstellar", "Shrek", "Joker", "Avatar", "Up"
 ]
 
-# --- KNN Recommendation ---
+
 def knn_recommend(users, target='TargetUser', n_neighbors=2):
     try:
         if len(users[target]) != len(movie_names):
@@ -45,7 +45,7 @@ def knn_recommend(users, target='TargetUser', n_neighbors=2):
     except Exception as e:
         return {"error": f"KNN Error: {str(e)}"}
 
-# --- Обучающие данные ---
+
 def get_training_data(users_dict, film_index):
     X, y = [], []
     for user, ratings in users_dict.items():
@@ -61,7 +61,7 @@ def get_training_data(users_dict, film_index):
 def get_target_features(target_ratings, film_index):
     return [[r for i, r in enumerate(target_ratings) if i != film_index]]
 
-# --- Предсказания (все модели) ---
+
 def predict_preferences(users_dict, film_indices):
     results = {}
     try:
@@ -76,13 +76,13 @@ def predict_preferences(users_dict, film_indices):
 
             target = get_target_features(users_dict["TargetUser"], film_index)
 
-            # Linear Regression
+           
             lr = LinearRegression()
             lr.fit(X, y)
             pred_score = lr.predict(target)[0]
             results[movie]["Linear Regression"] = f"{round(pred_score, 2)}"
 
-            # Классы: 1 если рейтинг >= 3, иначе 0
+            
             y_binary = [1 if val >= 3 else 0 for val in y]
 
             if len(set(y_binary)) < 2:
@@ -107,7 +107,7 @@ def predict_preferences(users_dict, film_indices):
     except Exception as e:
         return {"error": f"Prediction Error: {str(e)}"}
 
-# --- Apriori Algorithm ---
+
 def apriori_recommend(transactions, watched=None, min_support=0.2, min_confidence=0.3):
     try:
         all_items = sorted(set(item for t in transactions for item in t))
@@ -140,7 +140,7 @@ def apriori_recommend(transactions, watched=None, min_support=0.2, min_confidenc
     except Exception as e:
         return {"error": f"Apriori Error: {str(e)}"}
 
-# --- Анализ постера (CV + imagehash) ---
+
 reference_dir = "reference_posters"
 known_posters = {
     "Inception": "inception.jpg",
@@ -181,7 +181,7 @@ def analyze_poster(image_path):
     except Exception as e:
         return f"Ошибка: {str(e)}"
 
-# --- K-means кластеризация ---
+
 def get_kmeans_cluster(users):
     try:
         data = np.array(list(users.values()))
@@ -192,7 +192,7 @@ def get_kmeans_cluster(users):
     except Exception as e:
         return {"error": f"Clustering Error: {str(e)}"}
 
-# --- PCA визуализация ---
+
 def pca_visualize(users):
     try:
         data = np.array(list(users.values()))
