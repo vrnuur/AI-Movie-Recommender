@@ -18,11 +18,11 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB limit
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Ensure directories exist
+
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('static', exist_ok=True)
 
-# --- Данные пользователей ---
+
 users_data = {
     "User1": [5, 0, 4, 2, 3, 4, 5, 0, 2, 1],
     "User2": [4, 5, 0, 3, 4, 2, 0, 3, 4, 3],
@@ -31,12 +31,12 @@ users_data = {
     "TargetUser": [0] * 10
 }
 
-# --- Главная страница ---
+
 @app.route('/')
 def index():
     return render_template('index.html', movies=movie_names)
 
-# --- KNN рекомендации ---
+
 @app.route('/recommend', methods=['POST'])
 def recommend():
     try:
@@ -47,7 +47,7 @@ def recommend():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Предсказание понравится/не понравится ---
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -60,7 +60,7 @@ def predict():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Apriori рекомендации ---
+
 @app.route('/apriori', methods=['POST'])
 def apriori():
     try:
@@ -80,7 +80,7 @@ def apriori():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Анализ постера ---
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -106,7 +106,7 @@ def analyze():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- K-means кластеризация ---
+
 @app.route('/cluster', methods=['POST'])
 def cluster():
     try:
@@ -117,7 +117,7 @@ def cluster():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- PCA визуализация ---
+
 @app.route('/pca', methods=['POST'])
 def pca():
     try:
@@ -130,7 +130,7 @@ def pca():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Serve static files ---
+
 @app.route('/static/<path:filename>')
 def static_files(filename):
     return send_from_directory('static', filename)
